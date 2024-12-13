@@ -164,10 +164,8 @@ try:
             connection.sendmail(
                 from_addr=SENDER_EMAIL,
                 to_addrs=matching_email,
-                msg=f"Subject: Happy Birthday!
-
-{bday_message}"
-            )
+                msg=f"Subject: Happy Birthday!\n\n{bday_message}"
+                )
         print("Email sent successfully!")
 except FileNotFoundError as e:
     print(f"File not found: {e}")
@@ -177,6 +175,7 @@ except smtplib.SMTPAuthenticationError as e:
     print(f"Authentication failed: {e}")
 except Exception as e:
     print(f"An error occurred: {e}")
+
 ```
 
 ---
