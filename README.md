@@ -1,3 +1,4 @@
+
 # Birthday Email Automation
 
 This project automates the process of sending personalized birthday emails to recipients on their special day. It matches the current date with a list of birthdays from a CSV file, personalizes a pre-written letter template, and sends the email using Gmail's SMTP server.
@@ -8,7 +9,7 @@ This project automates the process of sending personalized birthday emails to re
 
 1. **Checks the Current Date**:
    - Compares today's month and day with the data in `birthdays.csv`.
-   
+
 2. **Selects a Template**:
    - Chooses a random birthday letter template from the `letter_template` folder.
 
@@ -27,7 +28,7 @@ This project automates the process of sending personalized birthday emails to re
 1. **`birthdays.csv`**: A CSV file with the following structure:
    ```
    name,email,year,month,day
-   Doe,your_email@gmail.com,1998,12,11
+   Doe,your_email@gmail.com,2000,1,1
    ```
 
    - **name**: Recipient’s name
@@ -50,6 +51,7 @@ This project automates the process of sending personalized birthday emails to re
   - `smtplib`
   - `datetime`
   - `random`
+  - `os`
 
 Install the required modules:
 ```bash
@@ -60,7 +62,7 @@ pip install pandas
 
 1. Use a Gmail account for sending emails.
 2. Enable **App Passwords** or **Allow Less Secure Apps** in Gmail settings.
-3. Replace the `email` and `password` in the script with your Gmail credentials.
+3. Replace the `SENDER_EMAIL` and `PASSWORD` in the script with your Gmail credentials.
 
 ---
 
@@ -83,8 +85,8 @@ Make sure your project is organized like this:
 1. **Set Your Email Credentials**:
    Open `main.py` and set your Gmail address and app password:
    ```python
-   email = "your_email@gmail.com"
-   password = "your_app_password"
+   SENDER_EMAIL = "your_email@gmail.com"
+   PASSWORD = "your_app_password"
    ```
 
 2. **Run the Script**:
@@ -103,7 +105,7 @@ Make sure your project is organized like this:
 
 ### Console
 ```
-Email sent successfully
+Email sent successfully!
 ```
 
 ### Email
@@ -116,11 +118,75 @@ Happy Birthday! Have an amazing day filled with joy and laughter.
 
 ---
 
+## Updated Code
+
+```python
+import os
+import smtplib
+import socket
+import datetime as dt
+import pandas
+import random
+
+SENDER_EMAIL = ""
+PASSWORD = ""
+PLACEHOLDER = "[NAME]"
+smtp_server = "smtp.gmail.com"
+port = 587
+
+birthday_data = pandas.read_csv("birthdays.csv")
+
+# Use relative path to ensure correct location
+file_path = os.path.join("letter_template", f"bday_letter{random.randint(1, 3)}.txt")
+print(f"Looking for file: {file_path}")
+
+today = dt.datetime.today()
+current_month = today.month
+current_day = today.day
+
+matching_rows = birthday_data[(birthday_data["month"] == current_month) & (birthday_data["day"] == current_day)]
+try:
+    if matching_rows.empty:
+        print("No matches for today's date.")
+    else:
+        matching_name = matching_rows.name.iloc[0]
+        matching_email = matching_rows.email.iloc[0]
+
+        # Open the file and replace placeholder
+        with open(file_path, "r") as bday_letter:
+            message = bday_letter.read()
+            bday_message = message.replace(PLACEHOLDER, matching_name)
+
+        # Send the email
+        with smtplib.SMTP(smtp_server, port) as connection:
+            connection.starttls()
+            connection.login(user=SENDER_EMAIL, password=PASSWORD)
+            connection.sendmail(
+                from_addr=SENDER_EMAIL,
+                to_addrs=matching_email,
+                msg=f"Subject: Happy Birthday!
+
+{bday_message}"
+            )
+        print("Email sent successfully!")
+except FileNotFoundError as e:
+    print(f"File not found: {e}")
+except (smtplib.SMTPConnectError, socket.timeout) as e:
+    print(f"Failed to connect: {e}")
+except smtplib.SMTPAuthenticationError as e:
+    print(f"Authentication failed: {e}")
+except Exception as e:
+    print(f"An error occurred: {e}")
+```
+
+---
+
 ## Error Handling
 
 The script includes error handling for:
 - **SMTP Connection Issues**: Handles connection timeouts or server errors.
 - **Authentication Issues**: Handles invalid credentials.
+- **File Not Found**: Handles missing or misnamed template files.
 - **General Errors**: Catches unexpected issues and logs them.
 
 ---
